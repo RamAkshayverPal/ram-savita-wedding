@@ -1,0 +1,3 @@
+# Printed invitation (contains phone numbers & address) — keep it out of the published site
+*.pdf
+.DS_Store
