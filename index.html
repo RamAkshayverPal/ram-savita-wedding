@@ -404,6 +404,27 @@
     backdrop-filter:blur(2px);
   }
 
+  /* Phone-only line breaks: desktop shows "A · B", phones show A / B. */
+  @media (min-width:768px){ br.mbr{ display:none; } }
+  @media (max-width:767px){
+    .mbr-sep{ display:none; }
+
+    /* Hero: one-line label; beside the envelope when there's no room below it. */
+    #inviteLabel{ white-space:nowrap; }
+    #inviteCardBtn.label-side #inviteLabel{ position:absolute; right:100%; top:calc(76% - 13px); margin:0 2px 0 0; }
+
+    /* Finale: fit one phone screen so the toran stays visible at the top. */
+    #footer{ min-height:100vh !important; min-height:100dvh !important; padding-top:76px; padding-bottom:36px; }
+    #footer .footer-diyas{ margin-bottom:10px; }
+    #footer .ornament{ margin-top:14px; margin-bottom:14px; }
+    #countdownLabel{ line-height:1.6; margin-bottom:8px; }
+    #footer .footer-seal{ margin-top:22px; }
+    #footer .footer-seal img{ width:96px; height:96px; margin-bottom:6px; }
+    #footerHashtag{ line-height:1.3; margin-bottom:6px; }
+    #footer .footer-seal > div{ line-height:1.45; }
+    #footerCoupleDate{ line-height:1.7; }
+  }
+
   /* ---------- Ceremony section ---------- */
   #ceremony-section{ padding-top:2rem; padding-bottom:1.75rem; }
   @media (min-width:640px){
@@ -1045,13 +1066,13 @@
   </section>
 
 
-  <footer data-nav="Blessings" class="js-parallax-section snap-section relative overflow-hidden bg-maroon-deep text-brass-light text-center px-5 pt-28 pb-14 min-h-[85vh] flex flex-col items-center justify-center font-display text-xl">
+  <footer id="footer" data-nav="Blessings" class="js-parallax-section snap-section relative overflow-hidden bg-maroon-deep text-brass-light text-center px-5 pt-28 pb-14 min-h-[85vh] flex flex-col items-center justify-center font-display text-xl">
     <div class="absolute inset-0 z-0" style="background:
       radial-gradient(circle at 30% 20%, rgba(232,150,31,0.2), transparent 40%),
       radial-gradient(circle at 75% 80%, rgba(201,163,78,0.18), transparent 45%);"></div>
     <div class="toran z-[2]" data-toran></div>
 
-    <div class="js-parallax-item relative z-[1] flex items-end justify-center gap-5 sm:gap-8 mb-5">
+    <div class="footer-diyas js-parallax-item relative z-[1] flex items-end justify-center gap-5 sm:gap-8 mb-5">
       <svg viewBox="0 0 100 100" class="diya-glow w-10 h-10 sm:w-12 sm:h-12"><ellipse class="flame" cx="50" cy="42" rx="9" ry="18" fill="#F4B94D"/><ellipse class="flame" cx="50" cy="46" rx="5" ry="11" fill="#E8961F"/><path d="M20 62 Q50 90 80 62 Q80 78 50 82 Q20 78 20 62 Z" fill="#C9A34E"/><ellipse cx="50" cy="62" rx="30" ry="8" fill="#E0B565"/></svg>
       <svg viewBox="0 0 100 100" class="diya-glow w-14 h-14 sm:w-16 sm:h-16"><ellipse class="flame" cx="50" cy="42" rx="9" ry="18" fill="#F4B94D"/><ellipse class="flame" cx="50" cy="46" rx="5" ry="11" fill="#E8961F"/><path d="M20 62 Q50 90 80 62 Q80 78 50 82 Q20 78 20 62 Z" fill="#C9A34E"/><ellipse cx="50" cy="62" rx="30" ry="8" fill="#E0B565"/></svg>
       <svg viewBox="0 0 100 100" class="diya-glow w-10 h-10 sm:w-12 sm:h-12"><ellipse class="flame" cx="50" cy="42" rx="9" ry="18" fill="#F4B94D"/><ellipse class="flame" cx="50" cy="46" rx="5" ry="11" fill="#E8961F"/><path d="M20 62 Q50 90 80 62 Q80 78 50 82 Q20 78 20 62 Z" fill="#C9A34E"/><ellipse cx="50" cy="62" rx="30" ry="8" fill="#E0B565"/></svg>
@@ -1070,7 +1091,7 @@
       </div>
     </div>
 
-    <div class="js-parallax-item relative z-[1] mt-8">
+    <div class="footer-seal js-parallax-item relative z-[1] mt-8">
       <img src="monogram-gold.png" alt="R &amp; S monogram" class="w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-3 drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)]">
       <div id="footerHashtag" class="font-serif italic font-semibold text-marigold-light text-2xl mb-4"></div>
       <div class="font-royal font-semibold tracking-[3px] text-brass-light/80 text-base">॥ Shubhamastu ॥</div>
@@ -1234,6 +1255,19 @@
     return e;
   }
 
+  // "A · B" -> desktop: "A · B" on one line; phones: A on one line, B on the next.
+  function setSplitText(id, a, b) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (!a || !b) { el.textContent = a || b || ''; return; }
+    el.textContent = '';
+    el.appendChild(document.createTextNode(a));
+    var sep = document.createElement('span'); sep.className = 'mbr-sep'; sep.textContent = ' · ';
+    var br = document.createElement('br'); br.className = 'mbr';
+    el.appendChild(sep); el.appendChild(br);
+    el.appendChild(document.createTextNode(b));
+  }
+
   function setText(id, value) {
     var el = document.getElementById(id);
     if (el && value !== undefined && value !== null) el.textContent = value;
@@ -1342,7 +1376,7 @@
 
   setText('footerLine', CONFIG.footer.line);
   setText('footerHashtag', CONFIG.couple.hashtag);
-  setText('footerCoupleDate', [CONFIG.couple.coupleShort, CONFIG.event.dateDisplay].filter(Boolean).join(' · '));
+  setSplitText('footerCoupleDate', CONFIG.couple.coupleShort, CONFIG.event.dateDisplay);
 
   // ---------------------------------------------------------------------
   // 2b. DESIGN LAYER: toran garlands, mandalas, lotus dividers, countdown
@@ -1419,7 +1453,11 @@
     var main = events.filter(function (e) { return /wedding|vivah|विवाह/i.test((e.titleEnglish || '') + (e.title || '')) && !/haldi|meh/i.test(e.titleEnglish || ''); }).pop() || events[events.length - 1];
     var target = CONFIG.event.countdownISO ? new Date(CONFIG.event.countdownISO).getTime()
                : (main && main.dateISO ? new Date(main.dateISO).getTime() : NaN);
-    if (CONFIG.event.countdownLabel) setText('countdownLabel', CONFIG.event.countdownLabel);
+    if (CONFIG.event.countdownLabel) {
+      var cl = CONFIG.event.countdownLabel, ci = cl.indexOf(' · ');
+      if (ci > 0) setSplitText('countdownLabel', cl.slice(0, ci), cl.slice(ci + 3));
+      else setText('countdownLabel', cl);
+    }
     var box = document.getElementById('countdown');
     if (!box || isNaN(target)) return;
     box.classList.remove('hidden');
@@ -1756,6 +1794,7 @@
     var btn = document.getElementById('inviteCardBtn');
     var svg = document.getElementById('inviteCardSvg');
     var hero = document.getElementById('hero');
+    var label = document.getElementById('inviteLabel');
     if (!video || !btn || !svg || !hero) return;
     var MARK = { landscape: { x: 0.908, y: 0.836 }, portrait: { x: 0.836, y: 0.908 } };
     var LABEL_H = 28;   // "Open Invitation" text under the envelope
@@ -1776,6 +1815,7 @@
       if (px - r > cw || py - r > ch) {
         btn.style.left = btn.style.top = btn.style.right = btn.style.bottom = '';
         svg.style.width = '';
+        btn.classList.remove('label-side');
         return;
       }
 
@@ -1784,7 +1824,20 @@
       var H = W * 1.3;   // SVG viewBox is 200 x 260
       // Seal / card centre sits at about (50%, 70%) of the SVG box.
       var left = Math.max(8, Math.min(px - W * 0.5, cw - W * 0.9));
-      var top = Math.min(py - H * 0.70, ch - H - LABEL_H - 6);
+      var top;
+      if (cw >= 768) {
+        top = Math.min(py - H * 0.70, ch - H - LABEL_H - 6);   // desktop: unchanged
+      } else {
+        // Phone: keep the envelope on the sparkle. If "Open Invitation" won't fit
+        // underneath, show it to the left of the envelope instead.
+        top = py - H * 0.70;
+        btn.classList.remove('label-side');
+        var labelH = (label ? label.offsetHeight : LABEL_H) + 8;
+        if (top + H + labelH > ch - 8) {
+          btn.classList.add('label-side');
+          top = Math.min(top, ch - H * 0.93 - 6);
+        }
+      }
 
       btn.style.left = left + 'px';
       btn.style.top = top + 'px';
