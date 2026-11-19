@@ -2316,6 +2316,30 @@
   }
   function later(fn, ms) { setTimeout(fn, ms); }
 
+  // Jump from the hero to the intro under the full-screen letter.
+  // iOS Safari can ignore a scroll made in the same frame the page is unlocked,
+  // and mandatory scroll-snap can pull it back, so: snap off, scroll, repeat over
+  // the next frames, re-check, then turn snap back on.
+  function jumpToIntro() {
+    if (!introEl) return;
+    var root = document.documentElement;
+    root.style.scrollBehavior = 'auto';
+    root.style.scrollSnapType = 'none';
+    function go() { window.scrollTo(0, introEl.getBoundingClientRect().top + (window.pageYOffset || root.scrollTop)); }
+    go();
+    requestAnimationFrame(function () {
+      go();
+      requestAnimationFrame(function () {
+        go();
+        setTimeout(function () {
+          go();
+          root.style.scrollSnapType = '';
+          root.style.scrollBehavior = '';
+        }, 120);
+      });
+    });
+  }
+
   function openEnvelope() {
     inviteState = 'opening';
     inviteCardBtn.style.pointerEvents = 'none';
@@ -2345,11 +2369,8 @@
       // Fills the screen: unlock, jump to the intro underneath, fade the letter away.
       later(function () {
         lockScroll(false);
-        var root = document.documentElement;
         if (introEl) introEl.classList.add('intro-hold');
-        root.style.scrollBehavior = 'auto';
-        if (introEl) introEl.scrollIntoView({ block: 'start' });
-        root.style.scrollBehavior = '';
+        jumpToIntro();
         // Letter drifts forward and dissolves into the photo; no intro text is visible yet.
         letterCard.style.transition = 'transform .8s cubic-bezier(.3,.6,.3,1)';
         letterCard.style.transform = 'scale(1.05)';
@@ -2360,6 +2381,7 @@
           letterCard.style.transition = '';
           letterCard.style.transform = '';
           if (introEl) introEl.classList.remove('intro-hold'); // text + petals now rise in
+          if (introEl && Math.abs(introEl.getBoundingClientRect().top) > window.innerHeight * 0.3) jumpToIntro(); // last safety net
           inviteState = 'open';
           hintState.update();
         }, 850);
