@@ -1987,6 +1987,37 @@
     unlockAudio(bgAudioSecondaryEl);
   }
 
+  // Guest leaves the page (switches to WhatsApp, locks the phone, changes tab):
+  // pause the music, and resume the right track when they come back. Only tracks
+  // we paused are resumed, so a pause from the lock-screen controls is respected.
+  var pausedByHide = false;
+  function onPageHide() {
+    if (!musicStarted) return;
+    if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+    [bgAudioEl, bgAudioSecondaryEl].forEach(function (el) {
+      if (el && !el.paused) { el.pause(); pausedByHide = true; }
+    });
+  }
+  function onPageShow() {
+    var hv = document.getElementById('heroVideo');
+    if (hv && hv.src && hv.paused && hv.getBoundingClientRect().bottom > 0) safePlay(hv);
+    if (!musicStarted || !pausedByHide) return;
+    pausedByHide = false;
+    var el = activeTrack === 'secondary' ? bgAudioSecondaryEl : bgAudioEl;
+    var other = el === bgAudioEl ? bgAudioSecondaryEl : bgAudioEl;
+    if (other) other.pause();
+    if (el && el.src) {
+      el.muted = false;
+      if (volumeWorks) el.volume = TARGET_VOLUME;
+      safePlay(el);
+    }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) onPageHide(); else onPageShow();
+  });
+  window.addEventListener('pagehide', onPageHide);
+  window.addEventListener('pageshow', function () { if (!document.hidden) onPageShow(); });
+
   function openDoor() {
     if (opened) return;
     opened = true;
